@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login — Gold Simulator</title>
+    <style>
+        :root {
+            --gold: #c9a84c; --gold-dark: #8a6d20;
+            --bg: #0d0d0d; --bg-panel: #141414; --bg-card: #1a1a1a;
+            --border: #2a2a2a; --text: #e0e0e0; --text-muted: #777;
+            --green: #3a8a5a; --red: #8a3a3a;
+            --font-mono: 'Courier New', Courier, monospace;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: var(--bg); color: var(--text);
+            font-family: var(--font-mono); font-size: 14px;
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+        }
+        .auth-box {
+            background: var(--bg-card); border: 1px solid var(--border);
+            padding: 2.5rem 2rem; width: 100%; max-width: 380px; border-radius: 4px;
+        }
+        .auth-title {
+            color: var(--gold); font-size: 0.9rem; letter-spacing: 0.25em;
+            text-transform: uppercase; text-align: center; margin-bottom: 2rem;
+        }
+        .auth-subtitle { color: var(--text-muted); font-size: 0.7rem; text-align: center; margin-top: -1.5rem; margin-bottom: 2rem; letter-spacing: 0.1em; }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.3rem; }
+        input {
+            width: 100%; background: var(--bg-panel); border: 1px solid var(--border);
+            color: var(--text); padding: 0.6rem 0.75rem; font-family: var(--font-mono);
+            font-size: 0.85rem; border-radius: 2px; outline: none; transition: border-color 0.15s;
+        }
+        input:focus { border-color: var(--gold-dark); }
+        .btn {
+            width: 100%; background: var(--gold-dark); color: var(--bg); border: none;
+            padding: 0.65rem; font-family: var(--font-mono); font-size: 0.75rem;
+            letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer;
+            border-radius: 2px; margin-top: 0.5rem; transition: background 0.15s;
+        }
+        .btn:hover { background: var(--gold); }
+        .alt-link { text-align: center; margin-top: 1.25rem; font-size: 0.75rem; color: var(--text-muted); }
+        .alt-link a { color: var(--gold); text-decoration: none; }
+        .alert { padding: 0.6rem 0.75rem; border-radius: 2px; font-size: 0.78rem; margin-bottom: 1rem; }
+        .alert-success { background: #0d2018; border: 1px solid var(--green); color: #7dd9a8; }
+        .alert-error   { background: #200d0d; border: 1px solid var(--red);   color: #d97777; }
+    </style>
+</head>
+<body>
+    <div class="auth-box">
+        <div class="auth-title">⬡ Gold Simulator</div>
+        <div class="auth-subtitle">Ledger-Based Gold Banking System</div>
+
+        {% if success %}
+        <div class="alert alert-success">{{ success }}</div>
+        {% endif %}
+        {% if error %}
+        <div class="alert alert-error">{{ error }}</div>
+        {% endif %}
+
+        <form action="/auth/login" method="post">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required autocomplete="current-password">
+            </div>
+            <button type="submit" class="btn">Sign In</button>
+        </form>
+        <div class="alt-link">No account? <a href="/auth/register">Register</a></div>
+    </div>
+</body>
+</html>

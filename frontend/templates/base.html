@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Gold Bank{% endblock %} — Gold Simulator</title>
+    <style>
+        :root {
+            --gold: #c9a84c;
+            --gold-light: #e8c96a;
+            --gold-dark: #8a6d20;
+            --bg: #0d0d0d;
+            --bg-panel: #141414;
+            --bg-card: #1a1a1a;
+            --border: #2a2a2a;
+            --text: #e0e0e0;
+            --text-muted: #777;
+            --green: #3a8a5a;
+            --red: #8a3a3a;
+            --font-mono: 'Courier New', Courier, monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font-mono);
+            font-size: 14px;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* ── NAV ── */
+        nav {
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--gold-dark);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 52px;
+        }
+        .nav-brand {
+            color: var(--gold);
+            font-size: 1rem;
+            font-weight: bold;
+            letter-spacing: 0.15em;
+            text-decoration: none;
+            text-transform: uppercase;
+        }
+        .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            transition: color 0.15s;
+        }
+        .nav-links a:hover { color: var(--gold); }
+        .nav-user {
+            color: var(--gold-light);
+            font-size: 0.8rem;
+        }
+
+        /* ── LAYOUT ── */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* ── CARDS ── */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .card-title {
+            color: var(--gold);
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* ── FORMS ── */
+        .form-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end; }
+        .form-group { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; min-width: 160px; }
+        label { font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); }
+        input, select, textarea {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.5rem 0.75rem;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            border-radius: 2px;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        input:focus, select:focus { border-color: var(--gold-dark); }
+
+        /* ── BUTTONS ── */
+        .btn {
+            background: var(--gold-dark);
+            color: var(--bg);
+            border: none;
+            padding: 0.5rem 1.25rem;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 2px;
+            transition: background 0.15s;
+            white-space: nowrap;
+        }
+        .btn:hover { background: var(--gold); }
+        .btn-danger { background: var(--red); color: #fcc; }
+        .btn-danger:hover { background: #a04040; }
+        .btn-sm { padding: 0.3rem 0.75rem; font-size: 0.7rem; }
+
+        /* ── ALERTS ── */
+        .alert {
+            padding: 0.75rem 1rem;
+            border-radius: 2px;
+            font-size: 0.8rem;
+            margin-bottom: 1rem;
+        }
+        .alert-success { background: #0d2018; border: 1px solid var(--green); color: #7dd9a8; }
+        .alert-error   { background: #200d0d; border: 1px solid var(--red);   color: #d97777; }
+
+        /* ── STATS GRID ── */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+        .stat-box {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            padding: 1rem;
+            border-radius: 2px;
+        }
+        .stat-label { font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.4rem; }
+        .stat-value { font-size: 1.4rem; color: var(--gold); font-weight: bold; }
+        .stat-unit  { font-size: 0.7rem; color: var(--text-muted); margin-left: 0.2rem; }
+
+        /* ── TABLE ── */
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        th {
+            text-align: left;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.65rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--gold);
+            border-bottom: 1px solid var(--border);
+        }
+        td { padding: 0.55rem 0.75rem; border-bottom: 1px solid #1e1e1e; }
+        tr:hover td { background: #161616; }
+        td.amount-positive { color: #7dd9a8; }
+        td.amount-negative { color: #d97777; }
+
+        /* ── EVENT TYPE BADGES ── */
+        .badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 2px;
+            font-size: 0.65rem;
+            letter-spacing: 0.1em;
+            font-weight: bold;
+        }
+        .badge-DEPOSIT      { background: #0d2018; color: #7dd9a8; border: 1px solid #2a6040; }
+        .badge-WITHDRAW     { background: #200d0d; color: #d97777; border: 1px solid #602a2a; }
+        .badge-ALLOCATE     { background: #0d1520; color: #77a8d9; border: 1px solid #2a4060; }
+        .badge-DEALLOCATE   { background: #1a1208; color: #d9b877; border: 1px solid #60501a; }
+        .badge-YIELD_CREDIT { background: #1a0d20; color: #c077d9; border: 1px solid #502a60; }
+        .badge-ACTIVE       { background: #0d2018; color: #7dd9a8; border: 1px solid #2a6040; }
+        .badge-DEALLOCATED  { background: #1a1a1a; color: #777; border: 1px solid #333; }
+
+        /* ── PAGE HEADER ── */
+        .page-header {
+            display: flex;
+            align-items: baseline;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .page-title { font-size: 1.1rem; color: var(--gold); letter-spacing: 0.1em; text-transform: uppercase; }
+        .page-sub   { font-size: 0.75rem; color: var(--text-muted); }
+
+        /* ── PAGINATION ── */
+        .pagination { display: flex; gap: 0.5rem; align-items: center; margin-top: 1rem; }
+        .pagination a, .pagination span {
+            padding: 0.3rem 0.7rem;
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            font-size: 0.75rem;
+            text-decoration: none;
+            color: var(--text-muted);
+        }
+        .pagination a:hover { border-color: var(--gold-dark); color: var(--gold); }
+        .pagination .current { border-color: var(--gold-dark); color: var(--gold); }
+
+        /* ── INVARIANT DISPLAY ── */
+        .invariant-bar {
+            background: var(--bg-panel);
+            border: 1px solid var(--gold-dark);
+            padding: 0.75rem 1rem;
+            border-radius: 2px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+        .invariant-bar code {
+            color: var(--gold-light);
+            font-family: var(--font-mono);
+        }
+    </style>
+</head>
+<body>
+    {% if request.cookies.get('session_token') %}
+    <nav>
+        <a class="nav-brand" href="/accounts/dashboard">⬡ Gold Simulator</a>
+        <div class="nav-links">
+            <a href="/accounts/dashboard">Vault</a>
+            <a href="/allocations/">Allocations</a>
+            <a href="/ledger/">Ledger</a>
+            <a href="/ledger/verify">Audit</a>
+        </div>
+        <div class="nav-user">
+            {% if user %}{{ user.username }}{% endif %}
+            &nbsp;·&nbsp;
+            <form action="/auth/logout" method="post" style="display:inline">
+                <button type="submit" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-family:var(--font-mono);font-size:0.8rem;">logout</button>
+            </form>
+        </div>
+    </nav>
+    {% endif %}
+
+    <div class="container">
+        {% if success %}
+        <div class="alert alert-success">✓ {{ success }}</div>
+        {% endif %}
+        {% if error %}
+        <div class="alert alert-error">✗ {{ error }}</div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

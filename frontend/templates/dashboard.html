@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Vault{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="page-title">Vault</div>
+    <div class="page-sub">account #{{ account.id }} · {{ user.username }}</div>
+</div>
+
+<div class="invariant-bar">
+    <strong>System Invariant:</strong>
+    <code>TOTAL_NET = VAULT + ALLOCATED + PENDING</code>
+    &nbsp;·&nbsp;
+    <code>{{ "%.4f"|format(system.total_deposited_grams - system.total_withdrawn_grams) }}g = {{ "%.4f"|format(system.vault_gold_grams) }}g + {{ "%.4f"|format(system.allocated_gold_grams) }}g + {{ "%.4f"|format(system.pending_withdrawal_grams) }}g</code>
+</div>
+
+<!-- Account Stats -->
+<div class="card">
+    <div class="card-title">Account Balance</div>
+    <div class="stats-grid">
+        <div class="stat-box">
+            <div class="stat-label">Available</div>
+            <div class="stat-value">{{ "%.4f"|format(account.balance_grams) }}<span class="stat-unit">g</span></div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Allocated</div>
+            <div class="stat-value">{{ "%.4f"|format(account.allocated_grams) }}<span class="stat-unit">g</span></div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Total Deposited</div>
+            <div class="stat-value">{{ "%.4f"|format(account.total_deposited_grams) }}<span class="stat-unit">g</span></div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Total Withdrawn</div>
+            <div class="stat-value">{{ "%.4f"|format(account.total_withdrawn_grams) }}<span class="stat-unit">g</span></div>
+        </div>
+    </div>
+</div>
+
+<!-- Operations -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+
+    <div class="card">
+        <div class="card-title">Deposit Gold</div>
+        <form action="/accounts/deposit" method="post">
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+                <label>Amount (grams)</label>
+                <input type="number" name="amount" step="0.000001" min="0.000001" placeholder="e.g. 100.5" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+                <label>Notes (optional)</label>
+                <input type="text" name="notes" placeholder="optional memo">
+            </div>
+            <button type="submit" class="btn">Deposit →</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Withdraw Gold</div>
+        <form action="/accounts/withdraw" method="post">
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+                <label>Amount (grams)</label>
+                <input type="number" name="amount" step="0.000001" min="0.000001" placeholder="e.g. 50.0" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+                <label>Notes (optional)</label>
+                <input type="text" name="notes" placeholder="optional memo">
+            </div>
+            <button type="submit" class="btn">Withdraw →</button>
+        </form>
+    </div>
+
+</div>
+
+<!-- System State -->
+<div class="card">
+    <div class="card-title">System State (Global)</div>
+    <div class="stats-grid">
+        <div class="stat-box">
+            <div class="stat-label">Vault Gold</div>
+            <div class="stat-value" style="font-size:1rem;">{{ "%.4f"|format(system.vault_gold_grams) }}<span class="stat-unit">g</span></div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Allocated</div>
+            <div class="stat-value" style="font-size:1rem;">{{ "%.4f"|format(system.allocated_gold_grams) }}<span class="stat-unit">g</span></div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Total Deposited</div>
+            <div class="stat-value" style="font-size:1rem;">{{ "%.4f"|format(system.total_deposited_grams) }}<span class="stat-unit">g</span></div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Total Withdrawn</div>
+            <div class="stat-value" style="font-size:1rem;">{{ "%.4f"|format(system.total_withdrawn_grams) }}<span class="stat-unit">g</span></div>
+        </div>
+    </div>
+    <div style="margin-top: 0.75rem; font-size: 0.7rem; color: var(--text-muted);">
+        Last updated: {{ system.last_updated_at }}
+    </div>
+</div>
+
+{% endblock %}

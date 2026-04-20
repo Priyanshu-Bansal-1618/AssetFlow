@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Ledger{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="page-title">Ledger</div>
+    <div class="page-sub">{{ total }} immutable events · append-only audit trail</div>
+</div>
+
+<!-- Filters -->
+<div class="card" style="padding: 1rem 1.5rem;">
+    <form action="/ledger/" method="get" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+        <div class="form-group" style="min-width: 180px;">
+            <label>Filter by Event Type</label>
+            <select name="event_type" onchange="this.form.submit()">
+                <option value="">All Events</option>
+                {% for et in event_types %}
+                <option value="{{ et }}" {% if event_type_filter == et %}selected{% endif %}>{{ et }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% if event_type_filter %}
+        <a href="/ledger/" style="color: var(--text-muted); font-size: 0.75rem; text-decoration: none; align-self: flex-end; padding-bottom: 0.5rem;">✕ clear filter</a>
+        {% endif %}
+        <div style="flex: 1;"></div>
+        <a href="/ledger/verify" class="btn btn-sm" style="align-self: flex-end; text-decoration: none; display: inline-block;">
+            Run Audit Check
+        </a>
+    </form>
+</div>
+
+<!-- Ledger Table -->
+<div class="card">
+    <div class="card-title">Events</div>
+    {% if events %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Balance After</th>
+                    <th>Ref</th>
+                    <th>Notes</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in events %}
+                <tr>
+                    <td style="color: var(--text-muted);">{{ e.id }}</td>
+                    <td><span class="badge badge-{{ e.event_type }}">{{ e.event_type }}</span></td>
+                    {% if e.event_type in ['DEPOSIT', 'DEALLOCATE', 'YIELD_CREDIT'] %}
+                    <td class="amount-positive">+{{ "%.4f"|format(e.amount_grams) }}g</td>
+                    {% elif e.event_type in ['WITHDRAW', 'ALLOCATE'] %}
+                    <td class="amount-negative">-{{ "%.4f"|format(e.amount_grams) }}g</td>
+                    {% else %}
+                    <td>{{ "%.4f"|format(e.amount_grams) }}g</td>
+                    {% endif %}
+                    <td style="color: var(--gold);">{{ "%.4f"|format(e.balance_after) }}g</td>
+                    <td style="color: var(--text-muted); font-size: 0.75rem;">
+                        {% if e.reference_id %}alloc#{{ e.reference_id }}{% else %}—{% endif %}
+                    </td>
+                    <td style="color: var(--text-muted); font-size: 0.75rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        {{ e.notes or '—' }}
+                    </td>
+                    <td style="color: var(--text-muted); font-size: 0.72rem; white-space: nowrap;">
+                        {{ e.created_at.strftime('%Y-%m-%d %H:%M:%S') if e.created_at else '—' }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="pagination">
+        {% if page > 1 %}
+        <a href="?page={{ page - 1 }}{% if event_type_filter %}&event_type={{ event_type_filter }}{% endif %}">← prev</a>
+        {% endif %}
+        <span class="current">{{ page }} / {{ total_pages }}</span>
+        {% if page < total_pages %}
+        <a href="?page={{ page + 1 }}{% if event_type_filter %}&event_type={{ event_type_filter }}{% endif %}">next →</a>
+        {% endif %}
+        <span style="color: var(--text-muted); font-size: 0.7rem; margin-left: 0.5rem;">{{ total }} total events</span>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div style="color: var(--text-muted); font-size: 0.8rem; padding: 1rem 0;">
+        No ledger events yet. Deposit gold to begin.
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
