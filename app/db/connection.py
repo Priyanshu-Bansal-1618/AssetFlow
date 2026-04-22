@@ -9,14 +9,26 @@ from psycopg2.extras import RealDictCursor
 from contextlib import contextmanager
 import os
 import logging
+from pathlib import Path
+
+from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
 
 _pool: pg_pool.ThreadedConnectionPool | None = None
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+# Support both conventional .env and a custom env filename.
+for env_name in (".env", "env"):
+    env_path = PROJECT_ROOT / env_name
+    if env_path.exists():
+        load_dotenv(env_path, override=False)
+        logger.info("Loaded environment from %s", env_path)
+        break
+
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql://postgres:postgres@localhost:5432/gold_simulator"
+    "postgresql://postgres:postgres@localhost:5432/assetflow"
 )
 
 

@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Yield{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="page-title">Yield</div>
+    <div class="page-sub">System yield earned · distribution to users · my yield history</div>
+</div>
+
+<!-- Vault Yield Summary -->
+<div class="card">
+    <div class="card-title">System Yield Summary</div>
+    <div class="stats-grid">
+        <div class="stat-box">
+            <div class="stat-label">Total Earned</div>
+            <div class="stat-value" style="font-size:1rem;">{{ "%.4f"|format(vault.total_yield_earned_grams) }}<span class="stat-unit">g</span></div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Total Distributed</div>
+            <div class="stat-value" style="font-size:1rem;">{{ "%.4f"|format(vault.total_yield_distributed_grams) }}<span class="stat-unit">g</span></div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">System Profit (fee)</div>
+            <div class="stat-value" style="font-size:1rem;">{{ "%.4f"|format(vault.system_profit_grams) }}<span class="stat-unit">g</span></div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Vault Gold</div>
+            <div class="stat-value" style="font-size:1rem;">{{ "%.4f"|format(vault.vault_gold_grams) }}<span class="stat-unit">g</span></div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Distribution -->
+{% if pending_yield %}
+<div class="card">
+    <div class="card-title">Pending Distribution ({{ pending_yield|length }})</div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Yield Event #</th><th>Source</th><th>Gross Yield</th>
+                    <th>System Fee</th><th>Distributable</th><th>Earned At</th><th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ye in pending_yield %}
+                <tr>
+                    <td style="color: var(--text-muted);">{{ ye.yield_event_id }}</td>
+                    <td style="color: var(--text-muted); font-size: 0.75rem;">
+                        {% if ye.deal_reference %}deal: {{ ye.deal_reference }}{% elif ye.counterparty %}{{ ye.counterparty }}{% else %}Collateral{% endif %}
+                    </td>
+                    <td class="amount-positive">+{{ "%.6f"|format(ye.gross_yield_grams) }}g</td>
+                    <td class="amount-negative">-{{ "%.6f"|format(ye.system_fee_grams) }}g</td>
+                    <td class="amount-neutral">{{ "%.6f"|format(ye.distributable_yield_grams) }}g</td>
+                    <td style="color: var(--text-muted); font-size: 0.75rem;">{{ ye.earned_at.strftime('%Y-%m-%d %H:%M') if ye.earned_at else '—' }}</td>
+                    <td>
+                        {% set dist_msg = "Distribute yield event #%s (%.6fg) pro-rata to all users?"|format(ye.yield_event_id, ye.distributable_yield_grams) %}
+                        <form action="/deals/distribute/{{ ye.yield_event_id }}" method="post" style="display:inline;"
+                              onsubmit="return confirm('{{ dist_msg }}')">
+                            <button type="submit" class="btn btn-sm">Distribute →</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Yield Event History -->
+{% if yield_history %}
+<div class="card">
+    <div class="card-title">All Yield Events</div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th><th>Source</th><th>Gross</th><th>Fee</th>
+                    <th>Distributable</th><th>Status</th><th>Earned At</th><th>Distributed At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ye in yield_history %}
+                <tr>
+                    <td style="color: var(--text-muted);">{{ ye.id }}</td>
+                    <td style="color: var(--text-muted); font-size: 0.75rem;">
+                        {% if ye.deal_reference %}{{ ye.deal_reference }}{% elif ye.counterparty %}{{ ye.counterparty }}{% else %}Collateral{% endif %}
+                    </td>
+                    <td class="amount-positive">+{{ "%.6f"|format(ye.gross_yield_grams) }}g</td>
+                    <td style="color: var(--text-muted);">{{ "%.6f"|format(ye.system_fee_grams) }}g</td>
+                    <td class="amount-neutral">{{ "%.6f"|format(ye.distributable_yield_grams) }}g</td>
+                    <td>
+                        {% if ye.distribution_completed %}
+                        <span class="badge badge-ACTIVE">distributed</span>
+                        {% else %}
+                        <span class="badge badge-DEALLOCATED">pending</span>
+                        {% endif %}
+                    </td>
+                    <td style="color: var(--text-muted); font-size: 0.75rem;">{{ ye.created_at.strftime('%Y-%m-%d %H:%M') if ye.created_at else '—' }}</td>
+                    <td style="color: var(--text-muted); font-size: 0.75rem;">{{ ye.distributed_at.strftime('%Y-%m-%d %H:%M') if ye.distributed_at else '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- My Yield History -->
+<div class="card">
+    <div class="card-title">My Yield Received</div>
+    {% if user_yield %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Yield Event #</th><th>Deal</th><th>My Balance (snapshot)</th>
+                    <th>Share</th><th>My Yield</th><th>Received At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for yd in user_yield %}
+                <tr>
+                    <td style="color: var(--text-muted);">{{ yd.yield_event_id }}</td>
+                    <td style="color: var(--text-muted); font-size: 0.75rem;">{{ yd.deal_reference or 'Collateral' }}</td>
+                    <td style="color: var(--text-muted);">{{ "%.4f"|format(yd.user_balance_snapshot) }}g</td>
+                    <td style="color: var(--text-muted);">{{ "%.4f"|format(yd.share_fraction * 100) }}%</td>
+                    <td class="amount-positive">+{{ "%.6f"|format(yd.yield_grams) }}g</td>
+                    <td style="color: var(--text-muted); font-size: 0.75rem;">{{ yd.created_at.strftime('%Y-%m-%d %H:%M') if yd.created_at else '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="color: var(--text-muted); font-size: 0.8rem; padding: 1rem 0;">
+        No yield received yet. Yield is distributed after deals or collateral locks are closed.
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

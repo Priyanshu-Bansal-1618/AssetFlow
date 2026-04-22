@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block title %}Deals{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="page-title">Lease Deals</div>
+    <div class="page-sub">{{ active_deals|length }} active · vault-level gold lending to counterparties</div>
+</div>
+
+<!-- Counterparty Exposure Summary -->
+<div class="card">
+    <div class="card-title">Counterparty Exposure</div>
+    {% if exposure %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Counterparty</th><th>Type</th><th>Rating</th>
+                    <th>Holding</th><th>Limit</th><th>% of Limit</th><th>Active Deals</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in exposure %}
+                <tr>
+                    <td>{{ c.name }}</td>
+                    <td><span class="badge badge-{{ c.entity_type }}">{{ c.entity_type }}</span></td>
+                    <td style="color: var(--text-muted);">{{ c.credit_rating or '—' }}</td>
+                    <td class="amount-neutral">{{ "%.4f"|format(c.gold_held_grams) }}g</td>
+                    <td style="color: var(--text-muted);">{{ "%.0f"|format(c.max_exposure_grams) }}g</td>
+                    {% set pct_class = 'amount-negative' if c.pct_of_limit and c.pct_of_limit > 80 else ('amount-warning' if c.pct_of_limit and c.pct_of_limit > 50 else 'amount-positive') %}
+                    <td class="{{ pct_class }}">
+                        {{ "%.1f"|format(c.pct_of_limit) if c.pct_of_limit else '—' }}%
+                    </td>
+                    <td style="color: var(--text-muted);">{{ c.active_deals }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="color: var(--text-muted); font-size: 0.8rem; padding: 0.5rem 0;">No counterparties yet.</div>
+    {% endif %}
+</div>
+
+<!-- Open New Lease Deal -->
+<div class="two-col">
+    <div class="card">
+        <div class="card-title">Open Lease Deal</div>
+        {% if counterparties %}
+        <form action="/deals/open-lease" method="post">
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+                <label>Counterparty</label>
+                <select name="counterparty_id" required>
+                    {% for c in counterparties %}
+                    <option value="{{ c.id }}">{{ c.name }} ({{ c.entity_type }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+                <label>Amount (grams)</label>
+                <input type="number" name="amount_grams" step="0.000001" min="1" placeholder="e.g. 500.0" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+                <label>Yield Rate (bps)</label>
+                <input type="number" name="yield_rate_bps" min="0" max="10000" value="150" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+                <label>Maturity Date (optional)</label>
+                <input type="date" name="maturity_date">
+            </div>
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+                <label>Deal Reference (optional)</label>
+                <input type="text" name="deal_reference" placeholder="e.g. CONTRACT-2026-001">
+            </div>
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+                <label>Notes</label>
+                <input type="text" name="notes" placeholder="optional">
+            </div>
+            <button type="submit" class="btn">Open Lease →</button>
+        </form>
+        {% else %}
+        <div style="color: var(--text-muted); font-size: 0.8rem; padding: 0.5rem 0;">
+            Add a counterparty first before opening a deal.
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Add Counterparty -->
+    <div class="card">
+        <div class="card-title">Add Counterparty</div>
+        <form action="/deals/counterparties/create" method="post">
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+                <label>Name</label>
+                <input type="text" name="name" placeholder="e.g. Acme Jewellers" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+                <label>Entity Type</label>
+                <select name="entity_type" required>
+                    <option value="JEWELLER">Jeweller</option>
+                    <option value="REFINER">Refiner</option>
+                    <option value="TRADING_DESK">Trading Desk</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+                <label>Credit Rating</label>
+                <input type="text" name="credit_rating" placeholder="e.g. A+, BBB, NR">
+            </div>
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+                <label>Max Exposure (grams)</label>
+                <input type="number" name="max_exposure_grams" min="0" step="0.01" value="5000">
+            </div>
+            <button type="submit" class="btn">Add Counterparty →</button>
+        </form>
+    </div>
+</div>
+
+<!-- Active Deals -->
+<div class="card">
+    <div class="card-title">Active Deals ({{ active_deals|length }})</div>
+    {% if active_deals %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Deal #</th><th>Reference</th><th>Counterparty</th>
+                    <th>Amount</th><th>Rate</th><th>Start</th><th>Maturity</th>
+                    <th>Days Active</th><th>Accrued Yield</th><th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in active_deals %}
+                <tr>
+                    <td style="color: var(--text-muted);">{{ d.deal_id }}</td>
+                    <td style="color: var(--text-muted); font-size: 0.75rem;">{{ d.deal_reference or '—' }}</td>
+                    <td>{{ d.counterparty }}</td>
+                    <td class="amount-neutral">{{ "%.4f"|format(d.amount_grams) }}g</td>
+                    <td>{{ d.yield_rate_bps }} bps</td>
+                    <td style="color: var(--text-muted); font-size: 0.75rem;">{{ d.start_date }}</td>
+                    <td style="color: var(--text-muted); font-size: 0.75rem;">{{ d.maturity_date or '—' }}</td>
+                    <td style="color: var(--text-muted);">{{ d.days_active }}</td>
+                    <td class="amount-positive">+{{ "%.6f"|format(d.accrued_yield_grams) }}g</td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <form action="/deals/close-deal/{{ d.deal_id }}" method="post" style="display:inline;"
+                                  onsubmit="return confirm('Close deal #{{ d.deal_id }}? This will return principal and record yield.')">
+                                <button type="submit" class="btn btn-sm">Close</button>
+                            </form>
+                            <form action="/deals/close-deal/{{ d.deal_id }}" method="post" style="display:inline;"
+                                  onsubmit="return confirm('Mark deal #{{ d.deal_id }} as DEFAULTED? Yield will be zero.')">
+                                <input type="hidden" name="is_default" value="true">
+                                <button type="submit" class="btn btn-sm btn-danger">Default</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="color: var(--text-muted); font-size: 0.8rem; padding: 1rem 0;">
+        No active deals. Open a lease deal above.
+    </div>
+    {% endif %}
+</div>
+
+<!-- All Deals History -->
+{% if all_deals %}
+<div class="card">
+    <div class="card-title">Deal History</div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Deal #</th><th>Reference</th><th>Counterparty</th>
+                    <th>Amount</th><th>Rate</th><th>Status</th><th>Start</th><th>Closed</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in all_deals %}
+                {% if d.status != 'ACTIVE' %}
+                <tr>
+                    <td style="color: var(--text-muted);">{{ d.deal_id }}</td>
+                    <td style="color: var(--text-muted); font-size: 0.75rem;">{{ d.deal_reference or '—' }}</td>
+                    <td>{{ d.counterparty }}</td>
+                    <td class="amount-neutral">{{ "%.4f"|format(d.amount_grams) }}g</td>
+                    <td>{{ d.yield_rate_bps }} bps</td>
+                    <td><span class="badge badge-{{ d.status }}">{{ d.status }}</span></td>
+                    <td style="color: var(--text-muted); font-size: 0.75rem;">{{ d.start_date }}</td>
+                    <td style="color: var(--text-muted); font-size: 0.75rem;">{{ d.closed_at.strftime('%Y-%m-%d') if d.closed_at else '—' }}</td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

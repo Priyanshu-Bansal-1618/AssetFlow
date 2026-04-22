@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Collateral{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <div class="page-title">Collateral Locks</div>
+    <div class="page-sub">Internal gold locks — no counterparty — fixed yield accrual</div>
+</div>
+
+<div class="two-col">
+    <!-- Open New Collateral Lock -->
+    <div class="card">
+        <div class="card-title">Open Collateral Lock</div>
+        <form action="/deals/open-collateral" method="post">
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+                <label>Amount (grams)</label>
+                <input type="number" name="amount_grams" step="0.000001" min="0.000001" placeholder="e.g. 200.0" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+                <label>Yield Rate (bps)</label>
+                <input type="number" name="yield_rate_bps" min="0" max="10000" value="100" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+                <label>Maturity Date (optional)</label>
+                <input type="date" name="maturity_date">
+            </div>
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+                <label>Notes</label>
+                <input type="text" name="notes" placeholder="optional">
+            </div>
+            <button type="submit" class="btn">Lock Gold →</button>
+        </form>
+        <div style="margin-top: 1rem; font-size: 0.7rem; color: var(--text-muted); line-height: 1.8;">
+            Gold moves from vault → internal lock.<br>
+            Yield = amount × rate × (days / 365).<br>
+            No external counterparty. No deal created.<br>
+            Close the lock to return gold + credit yield.
+        </div>
+    </div>
+
+    <!-- Vault Balance -->
+    <div class="card">
+        <div class="card-title">Vault Status</div>
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-label">Vault Available</div>
+                <div class="stat-value" style="font-size:1rem;">{{ "%.4f"|format(vault.vault_gold_grams) }}<span class="stat-unit">g</span></div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Total Allocated</div>
+                <div class="stat-value" style="font-size:1rem;">{{ "%.4f"|format(vault.allocated_gold_grams) }}<span class="stat-unit">g</span></div>
+            </div>
+        </div>
+        <div style="margin-top: 1rem; font-size: 0.7rem; color: var(--text-muted);">
+            Collateral locks come from vault available balance.<br>
+            Closing a lock returns gold + yield to vault.
+        </div>
+    </div>
+</div>
+
+<!-- Active Collateral Locks -->
+<div class="card">
+    <div class="card-title">Active Collateral Locks ({{ active_locks|length }})</div>
+    {% if active_locks %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Alloc #</th><th>Amount</th><th>Rate</th>
+                    <th>Locked At</th><th>Maturity</th><th>Days Held</th>
+                    <th>Accrued Yield</th><th>Notes</th><th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lock in active_locks %}
+                <tr>
+                    <td style="color: var(--text-muted);">{{ lock.allocation_id }}</td>
+                    <td class="amount-neutral">{{ "%.4f"|format(lock.amount_grams) }}g</td>
+                    <td>{{ lock.yield_rate_bps }} bps</td>
+                    <td style="color: var(--text-muted); font-size: 0.75rem;">{{ lock.allocated_at.strftime('%Y-%m-%d %H:%M') if lock.allocated_at else '—' }}</td>
+                    <td style="color: var(--text-muted); font-size: 0.75rem;">{{ lock.maturity_date or '—' }}</td>
+                    <td style="color: var(--text-muted);">{{ lock.days_held }}</td>
+                    <td class="amount-positive">+{{ "%.6f"|format(lock.accrued_yield_grams) }}g</td>
+                    <td style="color: var(--text-muted); font-size: 0.75rem; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ lock.notes or '—' }}</td>
+                    <td>
+                        <form action="/deals/close-collateral/{{ lock.allocation_id }}" method="post" style="display:inline;"
+                              onsubmit="return confirm('Close collateral lock #{{ lock.allocation_id }}? Gold and accrued yield will return to vault.')">
+                            <button type="submit" class="btn btn-sm">Close Lock</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="color: var(--text-muted); font-size: 0.8rem; padding: 1rem 0;">
+        No active collateral locks. Open one above.
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

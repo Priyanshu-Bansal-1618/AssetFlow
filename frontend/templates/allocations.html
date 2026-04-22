@@ -3,11 +3,10 @@
 {% block content %}
 
 <div class="page-header">
-    <div class="page-title">Allocations</div>
+    <div class="page-title">My Allocations</div>
     <div class="page-sub">Available: {{ "%.4f"|format(account.balance_grams) }}g · Allocated: {{ "%.4f"|format(account.allocated_grams) }}g</div>
 </div>
 
-<!-- New Allocation Form -->
 <div class="card">
     <div class="card-title">New Allocation</div>
     <form action="/allocations/allocate" method="post">
@@ -42,47 +41,36 @@
     </form>
 </div>
 
-<!-- Allocations Table -->
 <div class="card">
-    <div class="card-title">Allocation Positions ({{ allocations|length }})</div>
+    <div class="card-title">My Allocation Positions ({{ allocations|length }})</div>
     {% if allocations %}
     <div class="table-wrap">
         <table>
             <thead>
                 <tr>
-                    <th>#</th>
-                    <th>Type</th>
-                    <th>Status</th>
-                    <th>Amount</th>
-                    <th>Yield Rate</th>
-                    <th>Notes</th>
-                    <th>Allocated At</th>
-                    <th>Deallocated At</th>
-                    <th>Actions</th>
+                    <th>#</th><th>Type</th><th>Status</th><th>Amount</th>
+                    <th>Yield Rate</th><th>Notes</th><th>Allocated At</th><th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for alloc in allocations %}
                 <tr>
                     <td style="color: var(--text-muted);">{{ alloc.id }}</td>
-                    <td>{{ alloc.allocation_type }}</td>
+                    <td><span class="badge badge-{{ alloc.allocation_type }}">{{ alloc.allocation_type }}</span></td>
                     <td><span class="badge badge-{{ alloc.status }}">{{ alloc.status }}</span></td>
-                    <td style="color: var(--gold);">{{ "%.4f"|format(alloc.amount_grams) }}g</td>
+                    <td class="amount-neutral">{{ "%.4f"|format(alloc.amount_grams) }}g</td>
                     <td>{{ alloc.yield_rate_bps }} bps</td>
-                    <td style="color: var(--text-muted); font-size: 0.75rem; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ alloc.notes or '—' }}</td>
+                    <td style="color: var(--text-muted); font-size: 0.75rem;">{{ alloc.notes or '—' }}</td>
                     <td style="color: var(--text-muted); font-size: 0.75rem;">{{ alloc.allocated_at.strftime('%Y-%m-%d %H:%M') if alloc.allocated_at else '—' }}</td>
-                    <td style="color: var(--text-muted); font-size: 0.75rem;">{{ alloc.deallocated_at.strftime('%Y-%m-%d %H:%M') if alloc.deallocated_at else '—' }}</td>
                     <td>
                         {% if alloc.status == 'ACTIVE' %}
                         <div style="display: flex; gap: 0.5rem;">
-                            <!-- Credit Yield -->
                             <form action="/allocations/yield/{{ alloc.id }}" method="post" style="display:inline;">
-                                <button type="submit" class="btn btn-sm" title="Credit yield for this allocation">Yield</button>
+                                <button type="submit" class="btn btn-sm">Yield</button>
                             </form>
-                            <!-- Deallocate -->
-                            {% set confirm_msg = "Deallocate %.2fg from %s?" | format(alloc.amount_grams, alloc.allocation_type) %}
+                            {% set dealloc_msg = "Deallocate %.2fg?"|format(alloc.amount_grams) %}
                             <form action="/allocations/deallocate/{{ alloc.id }}" method="post" style="display:inline;"
-                                onsubmit="return confirm('{{ confirm_msg }}')">
+                                  onsubmit="return confirm('{{ dealloc_msg }}')">
                                 <button type="submit" class="btn btn-sm btn-danger">Dealloc</button>
                             </form>
                         </div>

@@ -221,10 +221,10 @@ GET /ledger/api/events     JSON paginated ledger events
 ### 1. Create the database
 
 ```bash
-createdb gold_simulator
-psql gold_simulator < db/schema.sql
-psql gold_simulator < db/triggers.sql
-psql gold_simulator < db/procedures.sql
+createdb assetflow
+psql assetflow < db/schema.sql
+psql assetflow < db/triggers.sql
+psql assetflow < db/procedures.sql
 ```
 
 ### 2. Configure environment

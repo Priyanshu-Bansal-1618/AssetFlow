@@ -10,7 +10,7 @@
 <!-- Filters -->
 <div class="card" style="padding: 1rem 1.5rem;">
     <form action="/ledger/" method="get" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
-        <div class="form-group" style="min-width: 180px;">
+        <div class="form-group" style="min-width: 200px;">
             <label>Filter by Event Type</label>
             <select name="event_type" onchange="this.form.submit()">
                 <option value="">All Events</option>
@@ -20,12 +20,10 @@
             </select>
         </div>
         {% if event_type_filter %}
-        <a href="/ledger/" style="color: var(--text-muted); font-size: 0.75rem; text-decoration: none; align-self: flex-end; padding-bottom: 0.5rem;">✕ clear filter</a>
+        <a href="/ledger/" style="color: var(--text-muted); font-size: 0.75rem; text-decoration: none; align-self: flex-end; padding-bottom: 0.5rem;">✕ clear</a>
         {% endif %}
         <div style="flex: 1;"></div>
-        <a href="/ledger/verify" class="btn btn-sm" style="align-self: flex-end; text-decoration: none; display: inline-block;">
-            Run Audit Check
-        </a>
+        <a href="/ledger/verify" class="btn btn-sm btn-outline" style="align-self: flex-end;">Run Audit</a>
     </form>
 </div>
 
@@ -37,13 +35,8 @@
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Type</th>
-                    <th>Amount</th>
-                    <th>Balance After</th>
-                    <th>Ref</th>
-                    <th>Notes</th>
-                    <th>Timestamp</th>
+                    <th>ID</th><th>Type</th><th>Amount</th><th>Balance After</th>
+                    <th>Alloc #</th><th>Deal #</th><th>Notes</th><th>Timestamp</th>
                 </tr>
             </thead>
             <tbody>
@@ -51,16 +44,19 @@
                 <tr>
                     <td style="color: var(--text-muted);">{{ e.id }}</td>
                     <td><span class="badge badge-{{ e.event_type }}">{{ e.event_type }}</span></td>
-                    {% if e.event_type in ['DEPOSIT', 'DEALLOCATE', 'YIELD_CREDIT'] %}
+                    {% if e.event_type in ['DEPOSIT', 'DEALLOCATE', 'YIELD_CREDIT', 'DEAL_CLOSE', 'YIELD_EARNED', 'YIELD_DISTRIBUTED'] %}
                     <td class="amount-positive">+{{ "%.4f"|format(e.amount_grams) }}g</td>
                     {% elif e.event_type in ['WITHDRAW', 'ALLOCATE'] %}
                     <td class="amount-negative">-{{ "%.4f"|format(e.amount_grams) }}g</td>
                     {% else %}
-                    <td>{{ "%.4f"|format(e.amount_grams) }}g</td>
+                    <td class="amount-neutral">{{ "%.4f"|format(e.amount_grams) }}g</td>
                     {% endif %}
-                    <td style="color: var(--gold);">{{ "%.4f"|format(e.balance_after) }}g</td>
+                    <td class="amount-neutral">{{ "%.4f"|format(e.balance_after) }}g</td>
                     <td style="color: var(--text-muted); font-size: 0.75rem;">
-                        {% if e.reference_id %}alloc#{{ e.reference_id }}{% else %}—{% endif %}
+                        {% if e.reference_id %}#{{ e.reference_id }}{% else %}—{% endif %}
+                    </td>
+                    <td style="color: var(--text-muted); font-size: 0.75rem;">
+                        {% if e.deal_id %}#{{ e.deal_id }}{% else %}—{% endif %}
                     </td>
                     <td style="color: var(--text-muted); font-size: 0.75rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                         {{ e.notes or '—' }}
@@ -74,7 +70,6 @@
         </table>
     </div>
 
-    <!-- Pagination -->
     {% if total_pages > 1 %}
     <div class="pagination">
         {% if page > 1 %}

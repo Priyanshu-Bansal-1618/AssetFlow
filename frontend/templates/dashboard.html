@@ -8,15 +8,13 @@
 </div>
 
 <div class="invariant-bar">
-    <strong>System Invariant:</strong>
-    <code>TOTAL_NET = VAULT + ALLOCATED + PENDING</code>
-    &nbsp;·&nbsp;
+    <strong>Invariant:</strong>
+    <code>NET = VAULT + ALLOCATED + PENDING</code> &nbsp;·&nbsp;
     <code>{{ "%.4f"|format(system.total_deposited_grams - system.total_withdrawn_grams) }}g = {{ "%.4f"|format(system.vault_gold_grams) }}g + {{ "%.4f"|format(system.allocated_gold_grams) }}g + {{ "%.4f"|format(system.pending_withdrawal_grams) }}g</code>
 </div>
 
-<!-- Account Stats -->
 <div class="card">
-    <div class="card-title">Account Balance</div>
+    <div class="card-title">My Account</div>
     <div class="stats-grid">
         <div class="stat-box">
             <div class="stat-label">Available</div>
@@ -37,9 +35,7 @@
     </div>
 </div>
 
-<!-- Operations -->
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-
+<div class="two-col">
     <div class="card">
         <div class="card-title">Deposit Gold</div>
         <form action="/accounts/deposit" method="post">
@@ -54,7 +50,6 @@
             <button type="submit" class="btn">Deposit →</button>
         </form>
     </div>
-
     <div class="card">
         <div class="card-title">Withdraw Gold</div>
         <form action="/accounts/withdraw" method="post">
@@ -69,10 +64,8 @@
             <button type="submit" class="btn">Withdraw →</button>
         </form>
     </div>
-
 </div>
 
-<!-- System State -->
 <div class="card">
     <div class="card-title">System State (Global)</div>
     <div class="stats-grid">
@@ -85,12 +78,16 @@
             <div class="stat-value" style="font-size:1rem;">{{ "%.4f"|format(system.allocated_gold_grams) }}<span class="stat-unit">g</span></div>
         </div>
         <div class="stat-box">
-            <div class="stat-label">Total Deposited</div>
-            <div class="stat-value" style="font-size:1rem;">{{ "%.4f"|format(system.total_deposited_grams) }}<span class="stat-unit">g</span></div>
+            <div class="stat-label">Yield Earned</div>
+            <div class="stat-value" style="font-size:1rem;">{{ "%.4f"|format(system.total_yield_earned_grams) }}<span class="stat-unit">g</span></div>
         </div>
         <div class="stat-box">
-            <div class="stat-label">Total Withdrawn</div>
-            <div class="stat-value" style="font-size:1rem;">{{ "%.4f"|format(system.total_withdrawn_grams) }}<span class="stat-unit">g</span></div>
+            <div class="stat-label">Yield Distributed</div>
+            <div class="stat-value" style="font-size:1rem;">{{ "%.4f"|format(system.total_yield_distributed_grams) }}<span class="stat-unit">g</span></div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">System Profit</div>
+            <div class="stat-value" style="font-size:1rem;">{{ "%.4f"|format(system.system_profit_grams) }}<span class="stat-unit">g</span></div>
         </div>
     </div>
     <div style="margin-top: 0.75rem; font-size: 0.7rem; color: var(--text-muted);">
