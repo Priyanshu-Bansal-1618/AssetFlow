@@ -157,14 +157,14 @@ This acquires a row-level exclusive lock on the account row for the duration of 
 ### Deadlock Prevention
 
 For `deallocate_gold`, two rows are locked (allocation + account). To prevent deadlocks from inconsistent lock ordering, the allocation row is always locked **before** the account row. This consistent ordering means two concurrent deallocations cannot deadlock each other.
-
+<!-- 
 ### Advisory Lock for System State
 
 `fn_sync_system_state` (the trigger that updates the single `system_state` row) uses:
 ```sql
 PERFORM pg_advisory_xact_lock(1);
 ```
-This is a transaction-scoped advisory lock that serializes all system_state updates, preventing lost-update races on the global totals without a separate mutex.
+This is a transaction-scoped advisory lock that serializes all system_state updates, preventing lost-update races on the global totals without a separate mutex. -->
 
 ### Connection Pool
 
